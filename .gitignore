@@ -1,0 +1,13 @@
+config.php
+*.xlsx
+!assets/templates/*.xlsx
+*.csv
+!districts.csv
+*.docx
+*.txt
+*.bak*
+__pycache__/
+var/
+files/
+splits/
+api/splits/

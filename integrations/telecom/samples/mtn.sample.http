@@ -1,0 +1,36 @@
+### MTN — obtain OAuth access token
+# Confirm the token path and authentication scheme with MTN.
+POST {{MTN_BASE_URL}}/{{MTN_TOKEN_PATH}}
+Authorization: Basic {{BASE64_CLIENT_ID_AND_SECRET}}
+Ocp-Apim-Subscription-Key: {{MTN_SUBSCRIPTION_KEY}}
+Content-Type: application/x-www-form-urlencoded
+Accept: application/json
+
+grant_type=client_credentials&scope={{MTN_SCOPE}}
+
+### MTN — verify subscriber/account name
+# The endpoint and payload below are placeholders pending MTN's KYC/name-enquiry specification.
+POST {{MTN_BASE_URL}}/{{MTN_NAME_VERIFICATION_PATH}}
+Authorization: Bearer {{MTN_ACCESS_TOKEN}}
+Ocp-Apim-Subscription-Key: {{MTN_SUBSCRIPTION_KEY}}
+X-Correlation-Id: {{UUID}}
+X-Target-Environment: {{MTN_ENVIRONMENT}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "msisdn": "256772123456",
+  "submittedName": "SAMPLE CUSTOMER",
+  "country": "UG",
+  "purpose": "ELECTORAL_COMMISSION_PAYMENT_VERIFICATION"
+}
+
+### Expected normalized result after mapping MTN's final response
+{
+  "provider": "MTN",
+  "phone": "256772123456",
+  "registeredName": "SAMPLE CUSTOMER",
+  "providerReference": "{{MTN_REFERENCE}}",
+  "status": "SUCCESS"
+}
+

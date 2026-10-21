@@ -1,0 +1,29 @@
+Options -Indexes -MultiViews
+DirectoryIndex index.php
+RewriteEngine On
+
+# Application internals and source workbooks are not public web downloads.
+RewriteRule ^(?:var|splits)(?:/|$) - [F,L,NC]
+RewriteRule ^(?:config|functions|app|layout|bulk_search_service|xlsx_service|lot_service|telecom_service|accountability_service)(?:\.php)?$ - [F,L,NC]
+<FilesMatch "(?i)\.(?:sql|xlsx?|csv|py|log|bak|ini|ps1)$">
+    Require all denied
+</FilesMatch>
+
+# Redirect only direct GET/HEAD requests; POST bodies must remain intact.
+RewriteCond %{REQUEST_METHOD} ^(?:GET|HEAD)$
+RewriteCond %{THE_REQUEST} \s/+[^?\ ]+\.php(?:[?\ ]|$) [NC]
+RewriteRule ^(.+)\.php$ $1 [R=302,L,NE]
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME}.php -f
+RewriteRule ^([A-Za-z0-9_/-]+)$ $1.php [END]
+
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/css application/javascript application/json
+</IfModule>
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType image/jpeg "access plus 7 days"
+    ExpiresByType font/woff2 "access plus 30 days"
+</IfModule>
+

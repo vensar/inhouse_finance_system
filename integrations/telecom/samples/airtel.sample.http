@@ -1,0 +1,41 @@
+### Airtel — obtain OAuth access token
+# Confirm the token path, country, currency, and authentication fields with Airtel.
+POST {{AIRTEL_BASE_URL}}/{{AIRTEL_TOKEN_PATH}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "client_id": "{{AIRTEL_CLIENT_ID}}",
+  "client_secret": "{{AIRTEL_CLIENT_SECRET}}",
+  "grant_type": "client_credentials"
+}
+
+### Airtel — verify subscriber/account name
+# The endpoint and payload below are placeholders pending Airtel's name-enquiry/KYC specification.
+POST {{AIRTEL_BASE_URL}}/{{AIRTEL_NAME_VERIFICATION_PATH}}
+Authorization: Bearer {{AIRTEL_ACCESS_TOKEN}}
+X-Country: UG
+X-Currency: UGX
+X-Client-Id: {{AIRTEL_CLIENT_ID}}
+X-Correlation-Id: {{UUID}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "subscriber": {
+    "country": "UG",
+    "msisdn": "256752123456"
+  },
+  "submittedName": "SAMPLE CUSTOMER",
+  "purpose": "ELECTORAL_COMMISSION_PAYMENT_VERIFICATION"
+}
+
+### Expected normalized result after mapping Airtel's final response
+{
+  "provider": "AIRTEL",
+  "phone": "256752123456",
+  "registeredName": "SAMPLE CUSTOMER",
+  "providerReference": "{{AIRTEL_REFERENCE}}",
+  "status": "SUCCESS"
+}
+
