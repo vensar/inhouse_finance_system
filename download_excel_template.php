@@ -23,3 +23,4 @@ header('Content-Disposition: attachment; filename="' . $download . '"');
 header("Content-Length: " . filesize($path));
 header("Cache-Control: private, no-store");
 readfile($path);
+

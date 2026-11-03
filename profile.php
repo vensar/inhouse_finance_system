@@ -69,7 +69,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         }
     }
 }
-?> <?php ecHeader("Profile", "profile"); ?>
+?>
+<?php ecHeader("Profile", "profile"); ?>
 
 <div class="container-fluid px-0">
     <div class="row justify-content-center">
@@ -77,8 +78,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             <h2 class="mb-4">My Profile</h2>
 
             <?php if ($message): ?>
+
             <div class="alert alert-<?php echo $messageType; ?> alert-dismissible fade show">
                 <?php echo htmlspecialchars($message); ?>
+
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
             <?php endif; ?>
@@ -136,6 +139,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                         />
                     </div>
                     <?php if ($userData["district_name"]): ?>
+
                     <div class="mb-3">
                         <label class="form-label" for="profile-field-5">Assigned District</label>
                         <input
@@ -167,13 +171,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
                     <div class="mb-3">
                         <label class="form-label" for="profile-field-6">Current Password</label>
-                        <input
-                            id="profile-field-6"
-                            type="password"
-                            class="form-control"
-                            name="old_password"
-                            required
-                        />
+                        <input id="profile-field-6" type="password" class="form-control" name="old_password" required />
                     </div>
                     <div class="mb-3">
                         <label class="form-label" for="profile-field-7">New Password</label>
@@ -209,3 +207,4 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 </div>
 <script src="assets/bootstrap.bundle.min.js"></script>
 <?php ecFooter(); ?>
+

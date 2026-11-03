@@ -21,10 +21,7 @@ function ecDashboard($userId, $role, $districtId, $from = null, $to = null)
     $end = (new DateTimeImmutable($to))->modify("+1 day")->format("Y-m-d");
     $scope = $role === "admin" ? "all" : "district-" . (int) $districtId;
     $path = __DIR__ . "/var/cache/dashboard-" . $scope . "-" . hash("sha256", $from . "|" . $to) . ".json";
-    $stats =
-        is_file($path) && filemtime($path) > time() - 60
-            ? json_decode(file_get_contents($path), true)
-            : null;
+    $stats = is_file($path) && filemtime($path) > time() - 60 ? json_decode(file_get_contents($path), true) : null;
     if (!$stats) {
         $where = " WHERE created_at>=? AND created_at<?";
         $params = [$from, $end];
@@ -42,9 +39,7 @@ function ecDashboard($userId, $role, $districtId, $from = null, $to = null)
         )
             ->get_result()
             ->fetch_assoc();
-        $stats["total_districts"] = (int) ecQuery(
-            "SELECT COUNT(*) AS n FROM districts WHERE name<>'UNCATEGORIZED'",
-        )
+        $stats["total_districts"] = (int) ecQuery("SELECT COUNT(*) AS n FROM districts WHERE name<>'UNCATEGORIZED'")
             ->get_result()
             ->fetch_assoc()["n"];
         $stats["by_district"] =
@@ -80,37 +75,47 @@ function ecDashboard($userId, $role, $districtId, $from = null, $to = null)
     )
         ->get_result()
         ->fetch_all(MYSQLI_ASSOC);
-    $stats["unread_messages"] = ecQuery(
-        "SELECT COUNT(*) AS n FROM messages WHERE receiver_id=? AND is_read=0",
-        "i",
-        [(int) $userId],
-    )
+    $stats["unread_messages"] = ecQuery("SELECT COUNT(*) AS n FROM messages WHERE receiver_id=? AND is_read=0", "i", [
+        (int) $userId,
+    ])
         ->get_result()
         ->fetch_assoc()["n"];
     $lotScope = $role === "admin" ? "" : " AND x.district_id=?";
     $lotTypes = $role === "admin" ? "ss" : "ssi";
     $lotParams = $role === "admin" ? [$from, $end] : [$from, $end, (int) $districtId];
     $stats["lot_activity"] = ecQuery(
-        "SELECT COUNT(DISTINCT x.id) uploads,COALESCE(SUM(x.row_count),0) entries,COALESCE(SUM(x.total_amount),0) amount FROM payment_lot_uploads x WHERE x.created_at>=? AND x.created_at<?" . $lotScope,
+        "SELECT COUNT(DISTINCT x.id) uploads,COALESCE(SUM(x.row_count),0) entries,COALESCE(SUM(x.total_amount),0) amount FROM payment_lot_uploads x WHERE x.created_at>=? AND x.created_at<?" .
+            $lotScope,
         $lotTypes,
         $lotParams,
-    )->get_result()->fetch_assoc();
-    $stats["active_lots"] = (int) ecQuery("SELECT COUNT(*) n FROM payment_lots WHERE status='ACTIVE'")->get_result()->fetch_assoc()["n"];
+    )
+        ->get_result()
+        ->fetch_assoc();
+    $stats["active_lots"] = (int) ecQuery("SELECT COUNT(*) n FROM payment_lots WHERE status='ACTIVE'")
+        ->get_result()
+        ->fetch_assoc()["n"];
     $telecomScope = $role === "admin" ? "" : " AND b.district_id=?";
     $telecomTypes = $role === "admin" ? "ss" : "ssi";
     $telecomParams = $role === "admin" ? [$from, $end] : [$from, $end, (int) $districtId];
     $stats["telecom_activity"] = ecQuery(
-        "SELECT COUNT(*) submitted,SUM(e.response_received_at IS NOT NULL) completed,SUM(e.cache_hit=1) cache_hits FROM telecom_verification_entries e JOIN telecom_verification_batches b ON b.id=e.batch_id WHERE e.created_at>=? AND e.created_at<?" . $telecomScope,
+        "SELECT COUNT(*) submitted,SUM(e.response_received_at IS NOT NULL) completed,SUM(e.cache_hit=1) cache_hits FROM telecom_verification_entries e JOIN telecom_verification_batches b ON b.id=e.batch_id WHERE e.created_at>=? AND e.created_at<?" .
+            $telecomScope,
         $telecomTypes,
         $telecomParams,
-    )->get_result()->fetch_assoc();
+    )
+        ->get_result()
+        ->fetch_assoc();
     if ($role === "admin") {
         $stats["accountability"] = ecQuery(
             "SELECT (SELECT COALESCE(SUM(amount),0) FROM accountability_allocations WHERE allocation_date>=? AND allocation_date<?) allocated,(SELECT COALESCE(SUM(invoice_amount),0) FROM accountability_expenses WHERE invoice_date>=? AND invoice_date<?) spent,(SELECT COALESCE(SUM(accounted_amount),0) FROM accountability_expenses WHERE invoice_date>=? AND invoice_date<?) accounted",
             "ssssss",
             [$from, $end, $from, $end, $from, $end],
-        )->get_result()->fetch_assoc();
-        $stats["active_users"] = (int) ecQuery("SELECT COUNT(*) n FROM users WHERE is_active=1")->get_result()->fetch_assoc()["n"];
+        )
+            ->get_result()
+            ->fetch_assoc();
+        $stats["active_users"] = (int) ecQuery("SELECT COUNT(*) n FROM users WHERE is_active=1")
+            ->get_result()
+            ->fetch_assoc()["n"];
     }
     return $stats;
 }
@@ -124,9 +129,7 @@ function ecUncategorizedDistrictId()
 {
     static $id = null;
     if ($id === null) {
-        $row = ecQuery("SELECT id FROM districts WHERE name='UNCATEGORIZED' LIMIT 1")
-            ->get_result()
-            ->fetch_assoc();
+        $row = ecQuery("SELECT id FROM districts WHERE name='UNCATEGORIZED' LIMIT 1")->get_result()->fetch_assoc();
         $id = (int) ($row["id"] ?? 0);
     }
     return $id;
@@ -190,25 +193,19 @@ function ecPaymentPage($phone, $name, $districtId, $before = 0, $after = 0, $sta
 }
 function ecChatPeer($sender, $receiverId)
 {
-    $peer = ecQuery(
-        "SELECT id,role,full_name,district_id FROM users WHERE id=? AND is_active=1",
-        "i",
-        [(int) $receiverId],
-    )
+    $peer = ecQuery("SELECT id,role,full_name,district_id FROM users WHERE id=? AND is_active=1", "i", [
+        (int) $receiverId,
+    ])
         ->get_result()
         ->fetch_assoc();
     if (
         !$peer ||
         (int) $peer["id"] === (int) $sender["id"] ||
         !in_array($sender["role"], ["admin", "district_user"], true) ||
-        ($sender["role"] === "admin"
-            ? $peer["role"] !== "district_user"
-            : $peer["role"] !== "admin")
+        ($sender["role"] === "admin" ? $peer["role"] !== "district_user" : $peer["role"] !== "admin")
     ) {
         throw new DomainException(
-            "Choose an active " .
-                ($sender["role"] === "admin" ? "district user" : "administrator") .
-                ".",
+            "Choose an active " . ($sender["role"] === "admin" ? "district user" : "administrator") . ".",
         );
     }
     return $peer;
@@ -255,11 +252,11 @@ function ecChatRead($user, $peerId, $after = 0, $before = 0)
     }
     if ($rows) {
         $max = max(array_column($rows, "id"));
-        ecQuery(
-            "UPDATE messages SET is_read=1 WHERE receiver_id=? AND sender_id=? AND id<=? AND is_read=0",
-            "iii",
-            [(int) $user["id"], (int) $peerId, (int) $max],
-        );
+        ecQuery("UPDATE messages SET is_read=1 WHERE receiver_id=? AND sender_id=? AND id<=? AND is_read=0", "iii", [
+            (int) $user["id"],
+            (int) $peerId,
+            (int) $max,
+        ]);
     }
     return $rows;
 }
@@ -299,7 +296,7 @@ function ecCsvPayments($path, $defaultDistrict = 0)
     if ($defaultDistrict && !isset($byId[$defaultDistrict])) {
         throw new DomainException("Choose a valid district.");
     }
-    usort($districts, fn ($a, $b) => strlen($b["name"]) <=> strlen($a["name"]));
+    usort($districts, fn($a, $b) => strlen($b["name"]) <=> strlen($a["name"]));
     $file = fopen($path, "rb");
     if (!$file) {
         throw new DomainException("Unable to read the CSV.");
@@ -313,18 +310,13 @@ function ecCsvPayments($path, $defaultDistrict = 0)
         if (!$raw) {
             throw new DomainException("The CSV is empty.");
         }
-        $headers = array_map(
-            fn ($h) => strtolower(preg_replace("/[^a-z0-9]/i", "", trim((string) $h))),
-            $raw,
-        );
+        $headers = array_map(fn($h) => strtolower(preg_replace("/[^a-z0-9]/i", "", trim((string) $h))), $raw);
         if (count(array_unique($headers)) !== count($headers)) {
             throw new DomainException("The CSV has duplicate column headings.");
         }
         foreach (["phone", "custname", "tranamount", "status", "narration"] as $required) {
             if (!in_array($required, $headers, true)) {
-                throw new DomainException(
-                    "Missing column: " . $required . ". Use the comma-separated CSV template.",
-                );
+                throw new DomainException("Missing column: " . $required . ". Use the comma-separated CSV template.");
             }
         }
         $rows = [];
@@ -336,15 +328,13 @@ function ecCsvPayments($path, $defaultDistrict = 0)
                 continue;
             }
             if ($number > 10001) {
-                throw new DomainException(
-                    "Upload at most 10,000 records per file. Split larger files first.",
-                );
+                throw new DomainException("Upload at most 10,000 records per file. Split larger files first.");
             }
             if (count($values) !== count($headers)) {
                 $errors[] = "Row $number: column count does not match the header.";
                 continue;
             }
-            $r = array_combine($headers, array_map(fn ($v) => trim((string) $v), $values));
+            $r = array_combine($headers, array_map(fn($v) => trim((string) $v), $values));
             if (!mb_check_encoding(implode("", $r), "UTF-8")) {
                 $errors[] = "Row $number: save the CSV as UTF-8.";
                 continue;
@@ -371,10 +361,7 @@ function ecCsvPayments($path, $defaultDistrict = 0)
                 foreach ($districts as $d) {
                     if (
                         $d["name"] !== "UNCATEGORIZED" &&
-                        preg_match(
-                            "/(?<![\pL\pN])" . preg_quote($d["name"], "/") . "(?![\pL\pN])/iu",
-                            $r["narration"],
-                        )
+                        preg_match("/(?<![\pL\pN])" . preg_quote($d["name"], "/") . "(?![\pL\pN])/iu", $r["narration"])
                     ) {
                         $contained = false;
                         foreach ($matches as $m) {
@@ -407,9 +394,7 @@ function ecCsvPayments($path, $defaultDistrict = 0)
         if ($errors) {
             throw new DomainException(
                 implode("\n", array_slice($errors, 0, 10)) .
-                    (count($errors) > 10
-                        ? "\nAdditional invalid rows: " . (count($errors) - 10)
-                        : ""),
+                    (count($errors) > 10 ? "\nAdditional invalid rows: " . (count($errors) - 10) : ""),
             );
         }
         if (!$rows) {
@@ -427,26 +412,21 @@ function ecImportCsv($path, $districtId, $userId)
     $db = getDBConnection();
     $db->begin_transaction();
     try {
-        ecQuery(
-            "INSERT INTO payment_imports(file_hash,uploaded_by,record_count) VALUES(?,?,?)",
-            "sii",
-            [$hash, (int) $userId, count($rows)],
-        );
+        ecQuery("INSERT INTO payment_imports(file_hash,uploaded_by,record_count) VALUES(?,?,?)", "sii", [
+            $hash,
+            (int) $userId,
+            count($rows),
+        ]);
         foreach (array_chunk($rows, 250) as $chunk) {
             $params = [];
             foreach ($chunk as $r) {
-                foreach (
-                    ["phone", "cust_name", "tran_amount", "status", "narration", "district_id"] as $k
-                ) {
+                foreach (["phone", "cust_name", "tran_amount", "status", "narration", "district_id"] as $k) {
                     $params[] = $r[$k];
-                };
+                }
             }
             ecQuery(
                 "INSERT INTO payments(phone,cust_name,tran_amount,status,narration,district_id,uploaded_by) VALUES " .
-                    implode(
-                        ",",
-                        array_fill(0, count($chunk), "(?,?,?,?,?,?," . (int) $userId . ")"),
-                    ),
+                    implode(",", array_fill(0, count($chunk), "(?,?,?,?,?,?," . (int) $userId . ")")),
                 str_repeat("sssssi", count($chunk)),
                 $params,
             );
@@ -457,10 +437,9 @@ function ecImportCsv($path, $districtId, $userId)
     } catch (Throwable $e) {
         $db->rollback();
         if ($e instanceof mysqli_sql_exception && $e->getCode() === 1062) {
-            throw new DomainException(
-                "This exact file has already been imported with this district selection.",
-            );
+            throw new DomainException("This exact file has already been imported with this district selection.");
         }
         throw $e;
     }
 }
+

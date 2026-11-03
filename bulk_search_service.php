@@ -14,10 +14,7 @@ function ecReadSearchCsv($path)
         if (!$raw) {
             throw new DomainException("The CSV is empty.");
         }
-        $headers = array_map(
-            fn ($h) => strtolower(preg_replace("/[^a-z0-9]/i", "", trim((string) $h))),
-            $raw,
-        );
+        $headers = array_map(fn($h) => strtolower(preg_replace("/[^a-z0-9]/i", "", trim((string) $h))), $raw);
         if (count(array_unique($headers)) !== count($headers)) {
             throw new DomainException("Duplicate column headings. Use the downloadable template.");
         }
@@ -42,7 +39,7 @@ function ecReadSearchCsv($path)
             if (count($cells) !== count($headers)) {
                 $error = "Column count does not match the header.";
             } else {
-                $r = array_combine($headers, array_map(fn ($v) => trim((string) $v), $cells));
+                $r = array_combine($headers, array_map(fn($v) => trim((string) $v), $cells));
                 $phone = $r["phone"];
                 $name = $r["custname"];
                 if (!mb_check_encoding($phone . $name, "UTF-8")) {
@@ -53,11 +50,9 @@ function ecReadSearchCsv($path)
                     $error = "Customer name exceeds 100 characters.";
                 } elseif (
                     $phone !== "" &&
-                    (!preg_match('/^\+?[0-9 ()-]+$/D', $phone) ||
-                        strlen(preg_replace("/[^0-9]/", "", $phone)) > 20)
+                    (!preg_match('/^\+?[0-9 ()-]+$/D', $phone) || strlen(preg_replace("/[^0-9]/", "", $phone)) > 20)
                 ) {
-                    $error =
-                        "Phone must contain digits, optionally with +, spaces, parentheses or hyphens.";
+                    $error = "Phone must contain digits, optionally with +, spaces, parentheses or hyphens.";
                 }
             }
             $normalized = preg_replace("/[^0-9]/", "", $phone);
@@ -125,9 +120,9 @@ function ecRunBulkSearch($rows, $mode, $districtId)
         "payments" => 0,
     ];
     $cache = [];
-    $cutoff = (int) ecQuery("SELECT COALESCE(MAX(id),0) AS max_id FROM payments")
-        ->get_result()
-        ->fetch_assoc()["max_id"];
+    $cutoff = (int) ecQuery("SELECT COALESCE(MAX(id),0) AS max_id FROM payments")->get_result()->fetch_assoc()[
+        "max_id"
+    ];
     foreach ($rows as &$row) {
         $row["max_id"] = $cutoff;
         $row["count"] = 0;
@@ -156,16 +151,11 @@ function ecRunBulkSearch($rows, $mode, $districtId)
             $names = [];
             if ((int) $cache[$key]["matches"] > 0) {
                 $nameStatement = ecQuery(
-                    "SELECT DISTINCT p.cust_name FROM payments p WHERE " .
-                        $where .
-                        " ORDER BY p.cust_name LIMIT 6",
+                    "SELECT DISTINCT p.cust_name FROM payments p WHERE " . $where . " ORDER BY p.cust_name LIMIT 6",
                     $types,
                     $params,
                 );
-                $names = array_column(
-                    $nameStatement->get_result()->fetch_all(MYSQLI_ASSOC),
-                    "cust_name",
-                );
+                $names = array_column($nameStatement->get_result()->fetch_all(MYSQLI_ASSOC), "cust_name");
                 $nameStatement->close();
             }
             $cache[$key]["more_names"] = count($names) > 5;
@@ -234,20 +224,11 @@ function ecExportSearch($search, $out)
         "",
     );
     foreach ($search["rows"] as $r) {
-        $input = [
-            $r["line"],
-            $r["phone"] !== "" ? "'" . $r["phone"] : "",
-            $r["name"],
-            $r["outcome"],
-            $r["count"],
-        ];
+        $input = [$r["line"], $r["phone"] !== "" ? "'" . $r["phone"] : "", $r["name"], $r["outcome"], $r["count"]];
         if (!$r["count"]) {
             fputcsv(
                 $out,
-                array_map(
-                    "ecCsvSafe",
-                    array_merge($input, ["", "", "", "", "", "", "", "", $r["error"]]),
-                ),
+                array_map("ecCsvSafe", array_merge($input, ["", "", "", "", "", "", "", "", $r["error"]])),
                 ",",
                 '"',
                 "",
@@ -289,3 +270,4 @@ function ecExportSearch($search, $out)
         $stmt->close();
     }
 }
+

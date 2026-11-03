@@ -136,16 +136,7 @@ function insertBulkPayments($payments, $userId, $districtId)
             $narration = sanitizeInput($payment["narration"] ?? "");
 
             $paymentDistrictId = $payment["district_id"] ?? $districtId;
-            $stmt->bind_param(
-                "ssdssii",
-                $phone,
-                $custName,
-                $amount,
-                $status,
-                $narration,
-                $paymentDistrictId,
-                $userId,
-            );
+            $stmt->bind_param("ssdssii", $phone, $custName, $amount, $status, $narration, $paymentDistrictId, $userId);
 
             if ($stmt->execute()) {
                 $inserted++;
@@ -166,9 +157,7 @@ function sendMessage($senderId, $receiverId, $message)
     $conn = getDBConnection();
     $message = sanitizeInput($message);
 
-    $stmt = $conn->prepare(
-        "INSERT INTO messages (sender_id, receiver_id, message) VALUES (?, ?, ?)",
-    );
+    $stmt = $conn->prepare("INSERT INTO messages (sender_id, receiver_id, message) VALUES (?, ?, ?)");
     $stmt->bind_param("iis", $senderId, $receiverId, $message);
 
     return $stmt->execute();
@@ -214,3 +203,4 @@ function extractDistrictFromNarration($narration)
 
     return null;
 }
+

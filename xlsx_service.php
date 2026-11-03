@@ -9,9 +9,7 @@ function ecSpreadsheetUpload(string $path, array $requiredHeaders, int $maximumR
     }
     $archive = new ZipArchive();
     if ($archive->open($path) !== true) {
-        throw new DomainException(
-            "The Excel workbook could not be opened. Download and use the supplied template.",
-        );
+        throw new DomainException("The Excel workbook could not be opened. Download and use the supplied template.");
     }
     try {
         $sharedStrings = [];
@@ -86,9 +84,7 @@ function ecSpreadsheetUpload(string $path, array $requiredHeaders, int $maximumR
     }
     foreach ($requiredHeaders as $header) {
         if (!isset($headers[$header])) {
-            throw new DomainException(
-                "Missing Excel column: " . $header . ". Download and use the supplied template.",
-            );
+            throw new DomainException("Missing Excel column: " . $header . ". Download and use the supplied template.");
         }
     }
     $rows = [];
@@ -137,3 +133,4 @@ function ecNormalizePhone(string $phone, int $line): string
     }
     return $normalized;
 }
+

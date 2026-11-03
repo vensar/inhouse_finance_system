@@ -6,11 +6,11 @@ function ecNameMatchPercentage(string $submittedName, string $registeredName): f
 {
     $normalize = static function (string $name): string {
         $name = mb_strtoupper(trim($name), "UTF-8");
-        return preg_replace('/[^\p{L}\p{N}]+/u', '', $name) ?? '';
+        return preg_replace("/[^\p{L}\p{N}]+/u", "", $name) ?? "";
     };
     $submitted = $normalize($submittedName);
     $registered = $normalize($registeredName);
-    if ($submitted === '' || $registered === '') {
+    if ($submitted === "" || $registered === "") {
         return 0.0;
     }
     $length = max(strlen($submitted), strlen($registered));
@@ -31,9 +31,7 @@ function ecTelecomAccess(int $userId): bool
 
 function ecSetTelecomAccess(int $userId, bool $enabled, int $adminId): void
 {
-    $user = ecQuery("SELECT id FROM users WHERE id=? AND role='district_user' AND is_active=1", "i", [
-        $userId,
-    ])
+    $user = ecQuery("SELECT id FROM users WHERE id=? AND role='district_user' AND is_active=1", "i", [$userId])
         ->get_result()
         ->fetch_assoc();
     if (!$user) {
@@ -57,13 +55,8 @@ function ecSetTelecomAccess(int $userId, bool $enabled, int $adminId): void
     }
 }
 
-function ecQueueTelecomWorkbook(
-    string $path,
-    string $filename,
-    string $provider,
-    int $districtId,
-    int $userId,
-): int {
+function ecQueueTelecomWorkbook(string $path, string $filename, string $provider, int $districtId, int $userId): int
+{
     if (!ecTelecomAccess($userId)) {
         throw new DomainException(
             "Your telecom verification access is disabled. Ask an administrator to grant access.",
@@ -78,9 +71,7 @@ function ecQueueTelecomWorkbook(
         $line = $row["_line"];
         $name = trim($row["custname"]);
         if ($name === "" || mb_strlen($name) > 100) {
-            throw new DomainException(
-                "Row {$line}: CustName is required and must not exceed 100 characters.",
-            );
+            throw new DomainException("Row {$line}: CustName is required and must not exceed 100 characters.");
         }
         $rows[] = [ecNormalizePhone($row["phone"], $line), $name];
     }
@@ -168,21 +159,30 @@ function ecTelecomUsage(?int $userId, string $from, string $to): array
         $entryParams[] = $userId;
     }
     $entries = ecQuery(
-        "SELECT COUNT(*) submitted_records,COUNT(DISTINCT e.phone) unique_phones,SUM(e.cache_hit=1) cached_results FROM telecom_verification_entries e JOIN telecom_verification_batches b ON b.id=e.batch_id WHERE e.created_at>=? AND e.created_at<?" . $userEntrySql,
+        "SELECT COUNT(*) submitted_records,COUNT(DISTINCT e.phone) unique_phones,SUM(e.cache_hit=1) cached_results FROM telecom_verification_entries e JOIN telecom_verification_batches b ON b.id=e.batch_id WHERE e.created_at>=? AND e.created_at<?" .
+            $userEntrySql,
         $entryTypes,
         $entryParams,
-    )->get_result()->fetch_assoc();
+    )
+        ->get_result()
+        ->fetch_assoc();
     $userCallSql = $userId === null ? "" : " AND l.requested_by=?";
     $calls = ecQuery(
-        "SELECT COUNT(*) api_calls,SUM(l.billable=1) billable_calls,SUM(l.provider='MTN') mtn_calls,SUM(l.provider='AIRTEL') airtel_calls FROM telecom_api_call_log l WHERE l.requested_at>=? AND l.requested_at<?" . $userCallSql,
+        "SELECT COUNT(*) api_calls,SUM(l.billable=1) billable_calls,SUM(l.provider='MTN') mtn_calls,SUM(l.provider='AIRTEL') airtel_calls FROM telecom_api_call_log l WHERE l.requested_at>=? AND l.requested_at<?" .
+            $userCallSql,
         $entryTypes,
         $entryParams,
-    )->get_result()->fetch_assoc();
+    )
+        ->get_result()
+        ->fetch_assoc();
     $validated = ecQuery(
-        "SELECT COUNT(DISTINCT e.phone) validated_numbers FROM telecom_verification_entries e JOIN telecom_verification_batches b ON b.id=e.batch_id WHERE e.response_received_at>=? AND e.response_received_at<?" . $userEntrySql,
+        "SELECT COUNT(DISTINCT e.phone) validated_numbers FROM telecom_verification_entries e JOIN telecom_verification_batches b ON b.id=e.batch_id WHERE e.response_received_at>=? AND e.response_received_at<?" .
+            $userEntrySql,
         $entryTypes,
         $entryParams,
-    )->get_result()->fetch_assoc();
+    )
+        ->get_result()
+        ->fetch_assoc();
     return array_merge($entries, $calls, $validated);
 }
 
@@ -190,8 +190,11 @@ function ecPendingTelecomRequests(int $limit = 100): array
 {
     $limit = max(1, min(1000, $limit));
     return ecQuery(
-        "SELECT c.* FROM telecom_verification_cache c WHERE c.match_status='PENDING' AND NOT EXISTS (SELECT 1 FROM telecom_api_call_log l WHERE l.cache_id=c.id) ORDER BY c.created_at,c.id LIMIT " . $limit,
-    )->get_result()->fetch_all(MYSQLI_ASSOC);
+        "SELECT c.* FROM telecom_verification_cache c WHERE c.match_status='PENDING' AND NOT EXISTS (SELECT 1 FROM telecom_api_call_log l WHERE l.cache_id=c.id) ORDER BY c.created_at,c.id LIMIT " .
+            $limit,
+    )
+        ->get_result()
+        ->fetch_all(MYSQLI_ASSOC);
 }
 function ecRecordTelecomApiCall(int $cacheId, string $provider, ?int $userId, ?int $districtId): int
 {
@@ -210,7 +213,10 @@ function ecRecordTelecomApiCall(int $cacheId, string $provider, ?int $userId, ?i
         }
         throw $error;
     }
-    ecQuery("UPDATE telecom_verification_cache SET api_call_started_at=NOW(),provider=? WHERE id=?", "si", [$provider, $cacheId]);
+    ecQuery("UPDATE telecom_verification_cache SET api_call_started_at=NOW(),provider=? WHERE id=?", "si", [
+        $provider,
+        $cacheId,
+    ]);
     return getDBConnection()->insert_id;
 }
 
@@ -224,7 +230,10 @@ function ecCompleteTelecomVerification(
     ?string $providerReference,
     ?string $errorMessage = null,
 ): void {
-    if (!in_array($provider, ["MTN", "AIRTEL"], true) || !in_array($matchStatus, ["MATCH", "PARTIAL", "NO_MATCH", "ERROR"], true)) {
+    if (
+        !in_array($provider, ["MTN", "AIRTEL"], true) ||
+        !in_array($matchStatus, ["MATCH", "PARTIAL", "NO_MATCH", "ERROR"], true)
+    ) {
         throw new DomainException("The telecom response contains an invalid provider or status.");
     }
     $db = getDBConnection();
@@ -239,7 +248,9 @@ function ecCompleteTelecomVerification(
             "SELECT id,submitted_name FROM telecom_verification_entries WHERE cache_id=? FOR UPDATE",
             "i",
             [$cacheId],
-        )->get_result()->fetch_all(MYSQLI_ASSOC);
+        )
+            ->get_result()
+            ->fetch_all(MYSQLI_ASSOC);
         foreach ($linkedEntries as $linkedEntry) {
             $entryPercentage = $matchPercentage;
             $entryStatus = $matchStatus;
@@ -250,7 +261,15 @@ function ecCompleteTelecomVerification(
             ecQuery(
                 "UPDATE telecom_verification_entries SET provider=?,registered_name=?,match_percentage=?,match_status=?,provider_reference=?,error_message=?,response_received_at=NOW() WHERE id=?",
                 "ssdsssi",
-                [$provider, $registeredName, $entryPercentage, $entryStatus, $providerReference, $errorMessage, $linkedEntry["id"]],
+                [
+                    $provider,
+                    $registeredName,
+                    $entryPercentage,
+                    $entryStatus,
+                    $providerReference,
+                    $errorMessage,
+                    $linkedEntry["id"],
+                ],
             );
         }
         ecQuery(
@@ -302,3 +321,4 @@ function ecTelecomBatchEntries(int $batchId, ?int $userId): array
         ->get_result()
         ->fetch_all(MYSQLI_ASSOC);
 }
+

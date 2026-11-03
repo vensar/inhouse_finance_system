@@ -23,6 +23,7 @@ $filters = ["phone" => $phone, "cust_name" => $name];
 session_write_close();
 ecHeader($title, $route);
 ?>
+
 <div class="page-heading">
     <div>
         <div class="eyebrow">Payment records</div>
@@ -30,10 +31,10 @@ ecHeader($title, $route);
         <p class="muted">
             <?= $failedOnly
                 ? "Only failed payment records are shown. "
-                : "" ?>Search by the beginning of a phone number or customer name.
-            <?= isAdmin()
+                : "" ?>Search by the beginning of a phone number or customer name. <?= isAdmin()
                 ? "All districts are included."
                 : "Includes your assigned district and UNCATEGORIZED records." ?>
+
         </p>
     </div>
 </div>
@@ -52,13 +53,7 @@ ecHeader($title, $route);
         </div>
         <div>
             <label class="form-label" for="cust_name">Customer name starts with</label>
-            <input
-                class="form-control"
-                id="cust_name"
-                name="cust_name"
-                maxlength="100"
-                value="<?= ecEscape($name) ?>"
-            />
+            <input class="form-control" id="cust_name" name="cust_name" maxlength="100" value="<?= ecEscape($name) ?>" />
         </div>
         <div class="d-flex gap-2">
             <button class="btn btn-primary">Search</button>
@@ -80,30 +75,25 @@ ecHeader($title, $route);
             <tbody>
                 <?php
                 foreach ($rows as $p): ?>
+
                 <tr>
                     <td>
                         <strong><?= ecEscape($p["cust_name"] ?: "Name not supplied") ?></strong>
                         <div><?= ecEscape($p["phone"]) ?></div>
                     </td>
-                    <td class="money" data-label="Amount · UGX"><?= number_format(
-                        $p["tran_amount"],
-                        0,
-                    ) ?></td>
+                    <td class="money" data-label="Amount · UGX"><?= number_format($p["tran_amount"], 0) ?></td>
                     <td data-label="Status">
-                        <span class="status <?= ecEscape($p["status"]) ?>"><?= ecEscape(
-                            $p["status"],
-                        ) ?></span>
+                        <span class="status <?= ecEscape($p["status"]) ?>"><?= ecEscape($p["status"]) ?></span>
                     </td>
                     <td data-label="District"><?= ecEscape($p["district_name"]) ?></td>
-                    <td data-label="Narration" class="narration"><?= ecEscape(
-                        $p["narration"],
-                    ) ?></td>
+                    <td data-label="Narration" class="narration"><?= ecEscape($p["narration"]) ?></td>
                     <td class="money" data-label="Added"><?= ecEscape(
                         date("d M Y", strtotime($p["created_at"])),
                     ) ?></td>
                 </tr>
                 <?php endforeach;
-if (!$rows): ?>
+                if (!$rows): ?>
+
                 <tr>
                     <td colspan="6" class="empty">
                         No records match this search.
@@ -111,7 +101,8 @@ if (!$rows): ?>
                     </td>
                 </tr>
                 <?php endif;
-?>
+                ?>
+
             </tbody>
         </table>
     </div>
@@ -120,21 +111,21 @@ if (!$rows): ?>
         <div class="d-flex gap-2">
             <?php
             if ($rows && $result["newer"]): ?>
+
             <a class="btn btn-outline-secondary" href="<?= ecEscape($route) ?>?<?= ecEscape(
-                http_build_query($filters + ["after" => $rows[0]["id"]]),
-            ) ?>">
-                Previous
-            </a>
+    http_build_query($filters + ["after" => $rows[0]["id"]]),
+) ?>"> Previous </a>
             <?php endif;
-if ($rows && $result["older"]): ?>
+            if ($rows && $result["older"]): ?>
+
             <a class="btn btn-outline-secondary" href="<?= ecEscape($route) ?>?<?= ecEscape(
-                http_build_query($filters + ["before" => end($rows)["id"]]),
-            ) ?>">
-                Next
-            </a>
+    http_build_query($filters + ["before" => end($rows)["id"]]),
+) ?>"> Next </a>
             <?php endif;
-?>
+            ?>
+
         </div>
     </nav>
 </section>
 <?php ecFooter(); ?>
+

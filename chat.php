@@ -19,6 +19,7 @@ if ($peerId) {
 session_write_close();
 ecHeader("Messages", "chat");
 ?>
+
 <div class="page-heading">
     <div>
         <div class="eyebrow">Team communication</div>
@@ -30,35 +31,33 @@ ecHeader("Messages", "chat");
 </div>
 <section class="panel chat-layout">
     <aside class="contacts" aria-label="Message contacts">
-        <div class="panel-heading"><h2><?= isAdmin()
-            ? "District users"
-            : "Administrators" ?></h2></div>
+        <div class="panel-heading"><h2><?= isAdmin() ? "District users" : "Administrators" ?></h2></div>
         <?php
         foreach ($contacts as $c): ?>
-        <a
-            class="contact <?= $peerId == $c["id"] ? "active" : "" ?>"
-            href="chat?peer=<?= (int) $c["id"] ?>"
-            data-peer="<?= (int) $c["id"] ?>"
-        >
+
+        <a class="contact <?= $peerId == $c["id"] ? "active" : "" ?>" href="chat?peer=<?= (int) $c["id"] ?>" data-peer="<?= (int) $c["id"] ?>">
             <?php if ($c["unread"]): ?>
+
             <span class="badge bg-danger"><?= (int) $c["unread"] ?></span>
             <?php endif; ?>
+
             <strong><?= ecEscape($c["full_name"]) ?></strong>
             <small><?= ecEscape($c["district_name"] ?: "Administrator") ?></small>
         </a>
         <?php endforeach;
-if (!$contacts): ?>
+        if (!$contacts): ?>
+
         <p class="empty">No active contacts yet.</p>
         <?php endif;
-?>
+        ?>
+
     </aside>
     <div class="conversation">
         <?php if ($peer): ?>
+
         <div class="conversation-title"><?= ecEscape($peer["full_name"]) ?></div>
         <div class="messages" id="messages" role="log" aria-live="polite" aria-label="Conversation">
-            <button class="btn btn-outline-secondary" id="older" hidden>
-                Load earlier messages
-            </button>
+            <button class="btn btn-outline-secondary" id="older" hidden>Load earlier messages</button>
             <div id="message-list"></div>
         </div>
         <p id="chat-error" class="chat-error" role="status"></p>
@@ -77,10 +76,10 @@ if (!$contacts): ?>
             <button class="btn btn-primary" type="submit">Send</button>
         </form>
         <?php else: ?>
-        <div class="empty"><?= ecEscape(
-            $error ?: "Choose a contact to open a conversation.",
-        ) ?></div>
+
+        <div class="empty"><?= ecEscape($error ?: "Choose a contact to open a conversation.") ?></div>
         <?php endif; ?>
+
     </div>
 </section>
 <script>
@@ -91,3 +90,4 @@ if (!$contacts): ?>
 </script>
 <script src="assets/chat.js" defer></script>
 <?php ecFooter(); ?>
+

@@ -72,8 +72,7 @@ if ($id !== "") {
     ) {
         $search = $saved;
     } else {
-        $error =
-            "These results have expired or were replaced by a newer search. Upload the file again.";
+        $error = "These results have expired or were replaced by a newer search. Upload the file again.";
     }
 }
 if (isset($_GET["download"]) && $search) {
@@ -95,6 +94,7 @@ $csrf = generateCSRFToken();
 session_write_close();
 ecHeader("Bulk search", "bulk_search");
 ?>
+
 <div class="page-heading">
     <div>
         <div class="eyebrow">Payment verification</div>
@@ -104,28 +104,21 @@ ecHeader("Bulk search", "bulk_search");
     <a class="btn btn-outline-secondary" href="bulk_search?template=1">Download CSV template</a>
 </div>
 <?php if ($error): ?>
+
 <div class="alert alert-danger" role="alert"><?= ecEscape($error) ?></div>
 <?php endif; ?>
+
 <section class="panel mb-4">
     <form method="post" action="bulk_search" enctype="multipart/form-data" class="search-row">
         <input type="hidden" name="csrf_token" value="<?= ecEscape($csrf) ?>" />
         <div>
             <label for="csv_file" class="form-label">Phone and CustName CSV</label>
-            <input
-                type="file"
-                id="csv_file"
-                name="csv_file"
-                class="form-control"
-                accept=".csv,text/csv"
-                required
-            />
+            <input type="file" id="csv_file" name="csv_file" class="form-control" accept=".csv,text/csv" required />
         </div>
         <div>
             <label for="mode" class="form-label">Match each row using</label>
             <select id="mode" name="mode" class="form-select">
-                <option value="both" <?= $mode === "both"
-                    ? "selected"
-                    : "" ?>>Both fields when supplied</option>
+                <option value="both" <?= $mode === "both" ? "selected" : "" ?>>Both fields when supplied</option>
                 <option value="either" <?= $mode === "either"
                     ? "selected"
                     : "" ?>>Either phone or customer name</option>
@@ -134,12 +127,12 @@ ecHeader("Bulk search", "bulk_search");
         <button class="btn btn-primary" type="submit">Search CSV</button>
     </form>
     <div class="panel-note">
-        Up to 1,000 rows and 2 MB. Keep both column headings; a row may supply either field or both.
-        Matches use complete values; names are case-insensitive. Phone formatting (+, spaces,
-        parentheses, hyphens) is removed, but country codes are not added. <?= $district === null
+        Up to 1,000 rows and 2 MB. Keep both column headings; a row may supply either field or both. Matches use
+        complete values; names are case-insensitive. Phone formatting (+, spaces, parentheses, hyphens) is removed, but
+        country codes are not added. <?= $district === null
             ? "Administrators search all districts."
-            : "Your results include your assigned district and UNCATEGORIZED records only." ?> A new
-        search replaces your previous results, which expire after 30 minutes.
+            : "Your results include your assigned district and UNCATEGORIZED records only." ?> A new search replaces your previous results, which expire after
+        30 minutes.
     </div>
 </section>
 <?php if ($search):
@@ -147,6 +140,7 @@ ecHeader("Bulk search", "bulk_search");
     $totals = $search["totals"];
     $base = "bulk_search?search=" . urlencode($id);
     ?>
+
 <section class="metrics" aria-label="Search summary">
     <?php foreach (
         [
@@ -154,32 +148,30 @@ ecHeader("Bulk search", "bulk_search");
             "matched" => "Rows with matches",
             "unmatched" => "Rows without matches",
             "invalid" => "Invalid rows",
-        ] as $key => $label
+        ]
+        as $key => $label
     ): ?>
+
     <article class="metric">
         <div class="metric-label"><?= $label ?></div>
         <div class="metric-value"><?= number_format($totals[$key]) ?></div>
     </article>
     <?php endforeach; ?>
+
 </section>
 <div class="page-heading">
     <p class="muted">
-        <?= number_format(
-            $totals["payments"],
-        ) ?> matching payment records across submitted rows · <?= $search["mode"] === "both"
+        <?= number_format($totals["payments"]) ?> matching payment records across submitted rows · <?= $search[
+     "mode"
+ ] === "both"
      ? "All supplied fields must match."
      : "Either supplied field may match." ?>
-        Repeated input rows can count the same payment more than once. Amounts include all statuses.
+ Repeated input rows can
+        count the same payment more than once. Amounts include all statuses.
     </p>
-    <a class="btn btn-outline-secondary" href="<?= ecEscape(
-        $base . "&download=1",
-    ) ?>">Download results CSV</a>
+    <a class="btn btn-outline-secondary" href="<?= ecEscape($base . "&download=1") ?>">Download results CSV</a>
 </div>
-<?php if (
-    isset($_GET["row"]) &&
-    ctype_digit((string) $_GET["row"]) &&
-    isset($search["rows"][(int) $_GET["row"]])
-):
+<?php if (isset($_GET["row"]) && ctype_digit((string) $_GET["row"]) && isset($search["rows"][(int) $_GET["row"]])):
 
     $index = (int) $_GET["row"];
     $input = $search["rows"][$index];
@@ -191,15 +183,14 @@ ecHeader("Bulk search", "bulk_search");
         array_pop($matches);
     }
     ?>
+
 <section class="panel mb-4">
     <div class="panel-heading">
         <div>
             <h2>CSV row <?= $input["line"] ?> · <?= ecEscape($input["outcome"]) ?></h2>
-            <p class="muted">
-                <?= ecEscape($input["phone"]) ?> · <?= ecEscape(
-                    $input["name"],
-                ) ?> · <?= number_format($input["count"]) ?> matches
-            </p>
+            <p class="muted"><?= ecEscape($input["phone"]) ?> · <?= ecEscape($input["name"]) ?> · <?= number_format(
+     $input["count"],
+ ) ?> matches</p>
         </div>
         <a class="btn btn-outline-secondary" href="<?= ecEscape($base) ?>">All search rows</a>
     </div>
@@ -217,44 +208,44 @@ ecHeader("Bulk search", "bulk_search");
             </thead>
             <tbody>
                 <?php
-                               foreach ($matches as $p): ?>
+                foreach ($matches as $p): ?>
+
                 <tr>
                     <td>
                         <strong><?= ecEscape($p["cust_name"] ?: "Name not supplied") ?></strong>
                         <div><?= ecEscape($p["phone"]) ?></div>
                     </td>
-                    <td data-label="Amount · UGX" class="money"><?= number_format(
-                        $p["tran_amount"],
-                        0,
-                    ) ?></td>
+                    <td data-label="Amount · UGX" class="money"><?= number_format($p["tran_amount"], 0) ?></td>
                     <td data-label="Status">
-                        <span class="status <?= ecEscape($p["status"]) ?>"><?= ecEscape(
-                            $p["status"],
-                        ) ?></span>
+                        <span class="status <?= ecEscape($p["status"]) ?>"><?= ecEscape($p["status"]) ?></span>
                     </td>
                     <td data-label="District"><?= ecEscape($p["district_name"]) ?></td>
-                    <td data-label="Narration" class="narration"><?= ecEscape(
-                        $p["narration"],
-                    ) ?></td>
+                    <td data-label="Narration" class="narration"><?= ecEscape($p["narration"]) ?></td>
                     <td data-label="Added"><?= ecEscape($p["created_at"]) ?></td>
                 </tr>
                 <?php endforeach;
-    if (!$matches): ?>
-                <tr><td colspan="6" class="empty"><?= ecEscape(
+                if (!$matches): ?>
+
+                <tr>
+                    <td colspan="6" class="empty"><?= ecEscape(
                     $input["error"] ?: "No matching payments in your accessible records.",
-                ) ?></td></tr>
+                ) ?></td>
+                </tr>
                 <?php endif;
-    ?>
+                ?>
+
             </tbody>
         </table>
     </div>
     <div class="pagination-bar">
         <a href="<?= ecEscape($base . "&row=" . $index) ?>">First matches</a>
         <?php if ($more): ?>
+
         <a class="btn btn-outline-secondary" href="<?= ecEscape(
             $base . "&row=" . $index . "&before=" . end($matches)["id"],
         ) ?>">Next 50</a>
         <?php endif; ?>
+
     </div>
 </section>
 <?php
@@ -263,12 +254,11 @@ else:
     $page = max(1, min((int) ($_GET["page"] ?? 1), (int) ceil(count($search["rows"]) / 25)));
     $offset = ($page - 1) * 25;
     ?>
+
 <section class="panel">
     <div class="panel-heading">
         <h2>Results by CSV row</h2>
-        <span class="muted">Page <?= $page ?> of <?= (int) ceil(
-            count($search["rows"]) / 25,
-        ) ?></span>
+        <span class="muted">Page <?= $page ?> of <?= (int) ceil(count($search["rows"]) / 25) ?></span>
     </div>
     <div class="table-responsive">
         <table class="table mobile-records">
@@ -284,49 +274,50 @@ else:
             </thead>
             <tbody>
                 <?php foreach (array_slice($search["rows"], $offset, 25, true) as $index => $r): ?>
+
                 <tr>
                     <td>
-                        <strong>Row <?= $r["line"] ?> · <?= ecEscape(
-                            $r["name"] ?: "Phone only",
-                        ) ?></strong>
+                        <strong>Row <?= $r["line"] ?> · <?= ecEscape($r["name"] ?: "Phone only") ?></strong>
                         <div><?= ecEscape($r["phone"]) ?></div>
                     </td>
                     <td data-label="Matched customer names">
                         <?php if (!empty($r["matched_names"])):
                             foreach ($r["matched_names"] as $matchedName): ?>
+
                         <div><?= ecEscape($matchedName ?: "no name") ?></div>
                         <?php endforeach;
                             if (!empty($r["more_names"])): ?>
+
                         <small class="muted">More names in View matches</small>
                         <?php endif;
                         elseif ($r["count"]): ?>
+
                         <a href="<?= ecEscape($base . "&row=" . $index) ?>">View customer names</a>
                         <?php else: ?>—<?php endif; ?>
+
                     </td>
                     <td data-label="Outcome">
                         <?= ecEscape($r["outcome"]) ?>
+
                         <?php if ($r["error"]): ?>
+
                         <div class="muted"><?= ecEscape($r["error"]) ?></div>
-                        <?php endif;
-                    ?>
+                        <?php endif; ?>
+
                     </td>
                     <td data-label="Matches"><?= number_format($r["count"]) ?></td>
-                    <td data-label="Total · UGX" class="money"><?= number_format(
-                        $r["amount"],
-                        0,
-                    ) ?></td>
+                    <td data-label="Total · UGX" class="money"><?= number_format($r["amount"], 0) ?></td>
                     <td>
                         <?php if ($r["count"]): ?>
+
                         <a href="<?= ecEscape($base . "&row=" . $index) ?>">View matches</a>
-                        <div class="muted">
-                            <?= number_format($r["success"]) ?> successful · <?= number_format(
-                                $r["failed"],
-                            ) ?> failed
-                        </div>
+                        <div class="muted"><?= number_format($r["success"]) ?> successful · <?= number_format($r["failed"]) ?> failed</div>
                         <?php else: ?>—<?php endif; ?>
+
                     </td>
                 </tr>
                 <?php endforeach; ?>
+
             </tbody>
         </table>
     </div>
@@ -334,23 +325,23 @@ else:
         <span class="muted">25 submitted rows per page</span>
         <div class="d-flex gap-2">
             <?php
-                                       if ($page > 1): ?>
-            <a class="btn btn-outline-secondary" href="<?= ecEscape(
-                $base . "&page=" . ($page - 1),
-            ) ?>">Previous</a>
+            if ($page > 1): ?>
+
+            <a class="btn btn-outline-secondary" href="<?= ecEscape($base . "&page=" . ($page - 1)) ?>">Previous</a>
             <?php endif;
-if ($offset + 25 < count($search["rows"])): ?>
-            <a class="btn btn-outline-secondary" href="<?= ecEscape(
-                $base . "&page=" . ($page + 1),
-            ) ?>">Next</a>
+            if ($offset + 25 < count($search["rows"])): ?>
+
+            <a class="btn btn-outline-secondary" href="<?= ecEscape($base . "&page=" . ($page + 1)) ?>">Next</a>
             <?php endif;
-?>
+            ?>
+
         </div>
     </nav>
 </section>
 <?php
 endif;
 endif; ?>
+
 <script>
     document.querySelector("form").addEventListener("submit", function () {
         const button = this.querySelector("button");
@@ -359,3 +350,4 @@ endif; ?>
     });
 </script>
 <?php ecFooter(); ?>
+

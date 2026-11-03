@@ -16,12 +16,11 @@ Replace every `{{PLACEHOLDER}}` only in protected server configuration. Never co
 
 The proposed application mapping is:
 
-| Provider response | System field |
-| --- | --- |
-| Provider transaction/reference ID | `provider_reference` |
-| Registered subscriber/account name | `registered_name` |
-| Locally calculated similarity | `match_percentage` |
-| Request outcome | `match_status` and `error_message` |
+| Provider response                  | System field                       |
+| ---------------------------------- | ---------------------------------- |
+| Provider transaction/reference ID  | `provider_reference`               |
+| Registered subscriber/account name | `registered_name`                  |
+| Locally calculated similarity      | `match_percentage`                 |
+| Request outcome                    | `match_status` and `error_message` |
 
 Name similarity should be calculated locally after the provider returns the registered name. The provider should not be assumed to calculate the percentage unless its final API contract explicitly includes it.
-

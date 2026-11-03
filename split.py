@@ -85,7 +85,13 @@ def get_district_for_payment(row, district_names, phone_mapping, payment_history
 
     # Second priority: Check all other fields for district names
     for col in row.index:
-        if col.lower() not in ["phone", "phone_number", "mobile", "contact", "district"]:
+        if col.lower() not in [
+            "phone",
+            "phone_number",
+            "mobile",
+            "contact",
+            "district",
+        ]:
             if pd.notna(row[col]):
                 field_value = str(row[col])
                 district = extract_district_from_text(field_value, district_names)
@@ -174,7 +180,9 @@ def process_payment_file(excel_file, districts_csv="districts.csv"):
 
     # Add district column
     def apply_district(row):
-        return get_district_for_payment(row, district_names, phone_mapping, payment_history)
+        return get_district_for_payment(
+            row, district_names, phone_mapping, payment_history
+        )
 
     df["district"] = df.apply(apply_district, axis=1)
 
@@ -260,7 +268,9 @@ def process_payment_file(excel_file, districts_csv="districts.csv"):
             {
                 "District": district,
                 "Record Count": len(data),
-                "File Size (MB)": round(data.memory_usage(deep=True).sum() / (1024 * 1024), 2),
+                "File Size (MB)": round(
+                    data.memory_usage(deep=True).sum() / (1024 * 1024), 2
+                ),
             }
         )
 

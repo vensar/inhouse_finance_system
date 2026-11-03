@@ -51,9 +51,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             if ($user) {
                 if (verifyPassword($password, $user["password"])) {
                     // Clear login attempts
-                    $stmt = $conn->prepare(
-                        "DELETE FROM login_attempts WHERE ip_address = ? OR username = ?",
-                    );
+                    $stmt = $conn->prepare("DELETE FROM login_attempts WHERE ip_address = ? OR username = ?");
                     $stmt->bind_param("ss", $ip, $username);
                     $stmt->execute();
 
@@ -111,24 +109,20 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     <body class="ec-login">
         <main class="login-card" aria-labelledby="login-title">
             <div class="login-header">
-                <img
-                    src="logo.jpg"
-                    class="login-logo"
-                    alt="Electoral Commission logo"
-                    width="86"
-                    height="86"
-                />
+                <img src="logo.jpg" class="login-logo" alt="Electoral Commission logo" width="86" height="86" />
                 <h3 id="login-title">In House Finance Management</h3>
                 <p class="mb-0 small opacity-75">Electoral Commission</p>
             </div>
             <div class="login-body">
                 <?php if ($error): ?>
+
                 <div class="alert alert-danger py-2 small" role="alert"><?php echo htmlspecialchars(
                     $error,
                     ENT_QUOTES,
                     "UTF-8",
                 ); ?></div>
                 <?php endif; ?>
+
                 <form method="POST" action="login">
                     <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(
                         $csrf_token,
@@ -147,11 +141,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                             spellcheck="false"
                             required
                             autofocus
-                            value="<?php echo htmlspecialchars(
-                                $_POST["username"] ?? "",
-                                ENT_QUOTES,
-                                "UTF-8",
-                            ); ?>"
+                            value="<?php echo htmlspecialchars($_POST["username"] ?? "", ENT_QUOTES, "UTF-8"); ?>"
                         />
                     </div>
                     <div class="mb-3">
@@ -196,4 +186,3 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         </script>
     </body>
 </html>
-

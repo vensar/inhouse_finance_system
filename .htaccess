@@ -4,7 +4,7 @@ RewriteEngine On
 
 # Application internals and source workbooks are not public web downloads.
 RewriteRule ^(?:var|splits)(?:/|$) - [F,L,NC]
-RewriteRule ^(?:config|functions|app|layout|bulk_search_service|xlsx_service|lot_service|telecom_service|accountability_service)(?:\.php)?$ - [F,L,NC]
+RewriteRule ^(?:config|functions|app|layout|bulk_search_service|xlsx_service|lot_service|telecom_service|accountability_service|accountability_attachment_service)(?:\.php)?$ - [F,L,NC]
 <FilesMatch "(?i)\.(?:sql|xlsx?|csv|py|log|bak|ini|ps1)$">
     Require all denied
 </FilesMatch>

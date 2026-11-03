@@ -1,4 +1,5 @@
 <?php
 
-$fixedAdvanceType = 'TRAVEL';
-require __DIR__ . '/advances.php';
+$fixedAdvanceType = "TRAVEL";
+require __DIR__ . "/advances.php";
+

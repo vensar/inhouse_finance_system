@@ -55,7 +55,9 @@ def extract_district_from_text(text, district_names):
         ]
 
         for variation in district_variations:
-            if len(variation) > 3 and re.search(r"\b" + re.escape(variation) + r"\b", text_upper):
+            if len(variation) > 3 and re.search(
+                r"\b" + re.escape(variation) + r"\b", text_upper
+            ):
                 return district
 
     return None
@@ -144,7 +146,13 @@ def get_district_for_payment(
 
     # Second priority: Check all other text fields for district names
     for col in row.index:
-        if col.lower() not in ["phone", "phone_number", "mobile", "contact", "district"]:
+        if col.lower() not in [
+            "phone",
+            "phone_number",
+            "mobile",
+            "contact",
+            "district",
+        ]:
             if pd.notna(row[col]) and isinstance(row[col], str):
                 district = extract_district_from_text(row[col], district_names)
                 if district:
@@ -217,7 +225,9 @@ def build_phone_district_history(all_dataframes, district_names, phone_col_name)
                 for field in text_fields:
                     for col in row.index:
                         if field.lower() in col.lower() and pd.notna(row[col]):
-                            district = extract_district_from_text(str(row[col]), district_names)
+                            district = extract_district_from_text(
+                                str(row[col]), district_names
+                            )
                             if district:
                                 break
                     if district:
@@ -227,7 +237,9 @@ def build_phone_district_history(all_dataframes, district_names, phone_col_name)
                 if not district:
                     for col in row.index:
                         if pd.notna(row[col]) and isinstance(row[col], str):
-                            district = extract_district_from_text(row[col], district_names)
+                            district = extract_district_from_text(
+                                row[col], district_names
+                            )
                             if district:
                                 break
 
@@ -284,7 +296,9 @@ def load_existing_district_data(district_folder, base_name, district):
     return None
 
 
-def append_to_existing_file(existing_df, new_data, district_folder, base_name, district):
+def append_to_existing_file(
+    existing_df, new_data, district_folder, base_name, district
+):
     """
     Append new data to existing file and save
     """
@@ -458,7 +472,9 @@ def process_all_sheets(excel_file, districts_csv="districts.csv"):
     base_name = os.path.splitext(os.path.basename(excel_file))[0]
 
     # Process each sheet
-    all_district_data = defaultdict(list)  # district -> list of dataframes from different sheets
+    all_district_data = defaultdict(
+        list
+    )  # district -> list of dataframes from different sheets
 
     for sheet_name, df in all_dataframes.items():
         print(f"\n{'─'*60}")
@@ -468,7 +484,11 @@ def process_all_sheets(excel_file, districts_csv="districts.csv"):
         # Add district column
         def apply_district(row):
             return get_district_for_payment(
-                row, district_names, phone_mapping, phone_district_history, phone_col_name
+                row,
+                district_names,
+                phone_mapping,
+                phone_district_history,
+                phone_col_name,
             )
 
         df = df.copy()
@@ -509,7 +529,9 @@ def process_all_sheets(excel_file, districts_csv="districts.csv"):
 
         # Check if existing file exists
         main_file = os.path.join(district_folder, f"{base_name}_{district}.xlsx")
-        existing_data = load_existing_district_data(district_folder, base_name, district)
+        existing_data = load_existing_district_data(
+            district_folder, base_name, district
+        )
 
         if existing_data is not None:
             create_backup(main_file)
@@ -518,7 +540,9 @@ def process_all_sheets(excel_file, districts_csv="districts.csv"):
             )
             record_count = len(combined_data)
             file_size = (
-                os.path.getsize(main_file) / (1024 * 1024) if os.path.exists(main_file) else 0
+                os.path.getsize(main_file) / (1024 * 1024)
+                if os.path.exists(main_file)
+                else 0
             )
         else:
             print(f"  No existing data found, creating new file")
@@ -553,7 +577,9 @@ def process_all_sheets(excel_file, districts_csv="districts.csv"):
 
             if file_size > 1.9:
                 print(f"  File is {file_size:.2f} MB, splitting into chunks...")
-                split_file_into_chunks(combined_new_data, district_folder, base_name, district)
+                split_file_into_chunks(
+                    combined_new_data, district_folder, base_name, district
+                )
 
             record_count = len(combined_new_data)
 

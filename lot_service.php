@@ -4,9 +4,10 @@ require_once __DIR__ . "/xlsx_service.php";
 
 function ecPaymentLots(?int $districtId = null, ?int $userId = null): array
 {
-    $scope = $districtId === null
-        ? ""
-        : " WHERE l.status='ACTIVE' AND (l.allocation_mode='ALL' OR EXISTS (SELECT 1 FROM payment_lot_allocations a WHERE a.lot_id=l.id AND a.user_id=?))";
+    $scope =
+        $districtId === null
+            ? ""
+            : " WHERE l.status='ACTIVE' AND (l.allocation_mode='ALL' OR EXISTS (SELECT 1 FROM payment_lot_allocations a WHERE a.lot_id=l.id AND a.user_id=?))";
     $sql =
         "SELECT l.*,u.full_name created_by_name,COUNT(DISTINCT x.id) upload_count," .
         "COALESCE(SUM(x.row_count),0) entry_count,COALESCE(SUM(x.total_amount),0) total_amount " .
@@ -14,11 +15,7 @@ function ecPaymentLots(?int $districtId = null, ?int $userId = null): array
         ($districtId === null ? "" : " AND x.district_id=?") .
         $scope .
         " GROUP BY l.id ORDER BY l.created_at DESC";
-    return ecQuery(
-        $sql,
-        $districtId === null ? "" : "ii",
-        $districtId === null ? [] : [$districtId, $userId],
-    )
+    return ecQuery($sql, $districtId === null ? "" : "ii", $districtId === null ? [] : [$districtId, $userId])
         ->get_result()
         ->fetch_all(MYSQLI_ASSOC);
 }
@@ -74,18 +71,19 @@ function ecCreatePaymentLot(
     $db = getDBConnection();
     $db->begin_transaction();
     try {
-        ecQuery(
-            "INSERT INTO payment_lots(name,description,created_by,allocation_mode) VALUES(?,?,?,?)",
-            "ssis",
-            [$name, $description, $userId, $allocationMode],
-        );
+        ecQuery("INSERT INTO payment_lots(name,description,created_by,allocation_mode) VALUES(?,?,?,?)", "ssis", [
+            $name,
+            $description,
+            $userId,
+            $allocationMode,
+        ]);
         $lotId = $db->insert_id;
         foreach ($allocatedUserIds as $allocatedUserId) {
-            ecQuery(
-                "INSERT INTO payment_lot_allocations(lot_id,user_id,allocated_by) VALUES(?,?,?)",
-                "iii",
-                [$lotId, $allocatedUserId, $userId],
-            );
+            ecQuery("INSERT INTO payment_lot_allocations(lot_id,user_id,allocated_by) VALUES(?,?,?)", "iii", [
+                $lotId,
+                $allocatedUserId,
+                $userId,
+            ]);
         }
         $db->commit();
         return $lotId;
@@ -107,12 +105,8 @@ function ecUserCanAccessPaymentLot(int $lotId, int $userId): bool
     return (bool) $row;
 }
 
-function ecSetPaymentLotAllocation(
-    int $lotId,
-    string $allocationMode,
-    array $allocatedUserIds,
-    int $adminId,
-): void {
+function ecSetPaymentLotAllocation(int $lotId, string $allocationMode, array $allocatedUserIds, int $adminId): void
+{
     $lot = ecPaymentLot($lotId);
     if (!$lot) {
         throw new DomainException("Payment lot not found.");
@@ -145,11 +139,11 @@ function ecSetPaymentLotAllocation(
         ecQuery("DELETE FROM payment_lot_allocations WHERE lot_id=?", "i", [$lotId]);
         if ($allocationMode === "SELECTED") {
             foreach ($allocatedUserIds as $allocatedUserId) {
-                ecQuery(
-                    "INSERT INTO payment_lot_allocations(lot_id,user_id,allocated_by) VALUES(?,?,?)",
-                    "iii",
-                    [$lotId, $allocatedUserId, $adminId],
-                );
+                ecQuery("INSERT INTO payment_lot_allocations(lot_id,user_id,allocated_by) VALUES(?,?,?)", "iii", [
+                    $lotId,
+                    $allocatedUserId,
+                    $adminId,
+                ]);
             }
         }
         $db->commit();
@@ -171,20 +165,15 @@ function ecSetPaymentLotStatus(int $lotId, string $status, int $userId): void
     if ($lot["status"] === "ARCHIVED" && $status !== "ARCHIVED") {
         throw new DomainException("Archived payment lots are read-only.");
     }
-    ecQuery(
-        "UPDATE payment_lots SET status=?,status_changed_by=?,status_changed_at=NOW() WHERE id=?",
-        "sii",
-        [$status, $userId, $lotId],
-    );
+    ecQuery("UPDATE payment_lots SET status=?,status_changed_by=?,status_changed_at=NOW() WHERE id=?", "sii", [
+        $status,
+        $userId,
+        $lotId,
+    ]);
 }
 
-function ecImportPaymentLotWorkbook(
-    string $path,
-    string $filename,
-    int $lotId,
-    int $districtId,
-    int $userId,
-): int {
+function ecImportPaymentLotWorkbook(string $path, string $filename, int $lotId, int $districtId, int $userId): int
+{
     $lot = ecPaymentLot($lotId);
     if (!$lot || $lot["status"] !== "ACTIVE") {
         throw new DomainException("Choose an active payment lot.");
@@ -200,9 +189,7 @@ function ecImportPaymentLotWorkbook(
         $phone = ecNormalizePhone($row["phone"], $line);
         $name = trim($row["custname"]);
         if ($name === "" || mb_strlen($name) > 100) {
-            throw new DomainException(
-                "Row {$line}: CustName is required and must not exceed 100 characters.",
-            );
+            throw new DomainException("Row {$line}: CustName is required and must not exceed 100 characters.");
         }
         $amount = str_replace(",", "", $row["tranamount"]);
         if (
@@ -260,9 +247,7 @@ function ecImportPaymentLotWorkbook(
     } catch (mysqli_sql_exception $error) {
         $db->rollback();
         if ((int) $error->getCode() === 1062) {
-            throw new DomainException(
-                "This workbook has already been uploaded to this payment lot for your district.",
-            );
+            throw new DomainException("This workbook has already been uploaded to this payment lot for your district.");
         }
         throw $error;
     } catch (Throwable $error) {
@@ -276,7 +261,10 @@ function ecPaymentUpload(int $uploadId): ?array
         "SELECT x.*,l.status lot_status,l.name lot_name,u.full_name uploaded_by_name,d.name district_name FROM payment_lot_uploads x JOIN payment_lots l ON l.id=x.lot_id JOIN districts d ON d.id=x.district_id LEFT JOIN users u ON u.id=x.uploaded_by WHERE x.id=?",
         "i",
         [$uploadId],
-    )->get_result()->fetch_assoc() ?: null;
+    )
+        ->get_result()
+        ->fetch_assoc() ?:
+        null;
 }
 
 function ecSetPaymentUploadAmendment(int $uploadId, bool $enabled, int $adminId): void
@@ -293,11 +281,11 @@ function ecSetPaymentUploadAmendment(int $uploadId, bool $enabled, int $adminId)
         "iii",
         [$enabled ? 1 : 0, $adminId, $uploadId],
     );
-    ecQuery(
-        "INSERT INTO payment_lot_amendment_log(upload_id,action,changed_by) VALUES(?,?,?)",
-        "isi",
-        [$uploadId, $enabled ? "GRANT" : "REVOKE", $adminId],
-    );
+    ecQuery("INSERT INTO payment_lot_amendment_log(upload_id,action,changed_by) VALUES(?,?,?)", "isi", [
+        $uploadId,
+        $enabled ? "GRANT" : "REVOKE",
+        $adminId,
+    ]);
 }
 
 function ecAssertPaymentUploadAmendable(int $uploadId, int $userId): array
@@ -324,7 +312,11 @@ function ecValidatePaymentEntry(string $phone, string $name, string $amount, str
         throw new DomainException("Customer name is required and must not exceed 100 characters.");
     }
     $amount = str_replace(",", "", trim($amount));
-    if (!preg_match('/^\d{1,11}(?:\.\d{1,2})?$/D', $amount) || (float) $amount <= 0 || (float) $amount >= 1000000000000) {
+    if (
+        !preg_match('/^\d{1,11}(?:\.\d{1,2})?$/D', $amount) ||
+        (float) $amount <= 0 ||
+        (float) $amount >= 1000000000000
+    ) {
         throw new DomainException("Amount must be a positive number with up to two decimal places.");
     }
     if (mb_strlen($narration) > 500) {
@@ -342,16 +334,35 @@ function ecRecalculatePaymentUpload(int $uploadId): void
     );
 }
 
-function ecAddPaymentEntry(int $uploadId, int $userId, string $phone, string $name, string $amount, string $narration): int
-{
+function ecAddPaymentEntry(
+    int $uploadId,
+    int $userId,
+    string $phone,
+    string $name,
+    string $amount,
+    string $narration,
+): int {
     $upload = ecAssertPaymentUploadAmendable($uploadId, $userId);
     [$phone, $name, $amount, $narration] = ecValidatePaymentEntry($phone, $name, $amount, $narration);
     $db = getDBConnection();
     $db->begin_transaction();
     try {
-        ecQuery("INSERT INTO payment_lot_entries(upload_id,lot_id,district_id,phone,cust_name,amount,narration) VALUES(?,?,?,?,?,?,?)", "iiissss", [$uploadId, $upload["lot_id"], $upload["district_id"], $phone, $name, $amount, $narration]);
+        ecQuery(
+            "INSERT INTO payment_lot_entries(upload_id,lot_id,district_id,phone,cust_name,amount,narration) VALUES(?,?,?,?,?,?,?)",
+            "iiissss",
+            [$uploadId, $upload["lot_id"], $upload["district_id"], $phone, $name, $amount, $narration],
+        );
         $entryId = $db->insert_id;
-        ecQuery("INSERT INTO payment_lot_amendment_log(upload_id,entry_id,action,changed_by,after_json) VALUES(?,?,'ADD',?,?)", "iiis", [$uploadId, $entryId, $userId, json_encode(compact("phone", "name", "amount", "narration"), JSON_UNESCAPED_UNICODE)]);
+        ecQuery(
+            "INSERT INTO payment_lot_amendment_log(upload_id,entry_id,action,changed_by,after_json) VALUES(?,?,'ADD',?,?)",
+            "iiis",
+            [
+                $uploadId,
+                $entryId,
+                $userId,
+                json_encode(compact("phone", "name", "amount", "narration"), JSON_UNESCAPED_UNICODE),
+            ],
+        );
         ecRecalculatePaymentUpload($uploadId);
         $db->commit();
         return $entryId;
@@ -361,10 +372,23 @@ function ecAddPaymentEntry(int $uploadId, int $userId, string $phone, string $na
     }
 }
 
-function ecUpdatePaymentEntry(int $entryId, int $uploadId, int $userId, string $phone, string $name, string $amount, string $narration): void
-{
+function ecUpdatePaymentEntry(
+    int $entryId,
+    int $uploadId,
+    int $userId,
+    string $phone,
+    string $name,
+    string $amount,
+    string $narration,
+): void {
     ecAssertPaymentUploadAmendable($uploadId, $userId);
-    $before = ecQuery("SELECT phone,cust_name,amount,narration FROM payment_lot_entries WHERE id=? AND upload_id=?", "ii", [$entryId, $uploadId])->get_result()->fetch_assoc();
+    $before = ecQuery(
+        "SELECT phone,cust_name,amount,narration FROM payment_lot_entries WHERE id=? AND upload_id=?",
+        "ii",
+        [$entryId, $uploadId],
+    )
+        ->get_result()
+        ->fetch_assoc();
     if (!$before) {
         throw new DomainException("Payment entry not found.");
     }
@@ -372,8 +396,22 @@ function ecUpdatePaymentEntry(int $entryId, int $uploadId, int $userId, string $
     $db = getDBConnection();
     $db->begin_transaction();
     try {
-        ecQuery("UPDATE payment_lot_entries SET phone=?,cust_name=?,amount=?,narration=? WHERE id=? AND upload_id=?", "ssssii", [$phone, $name, $amount, $narration, $entryId, $uploadId]);
-        ecQuery("INSERT INTO payment_lot_amendment_log(upload_id,entry_id,action,changed_by,before_json,after_json) VALUES(?,?,'UPDATE',?,?,?)", "iiiss", [$uploadId, $entryId, $userId, json_encode($before, JSON_UNESCAPED_UNICODE), json_encode(compact("phone", "name", "amount", "narration"), JSON_UNESCAPED_UNICODE)]);
+        ecQuery(
+            "UPDATE payment_lot_entries SET phone=?,cust_name=?,amount=?,narration=? WHERE id=? AND upload_id=?",
+            "ssssii",
+            [$phone, $name, $amount, $narration, $entryId, $uploadId],
+        );
+        ecQuery(
+            "INSERT INTO payment_lot_amendment_log(upload_id,entry_id,action,changed_by,before_json,after_json) VALUES(?,?,'UPDATE',?,?,?)",
+            "iiiss",
+            [
+                $uploadId,
+                $entryId,
+                $userId,
+                json_encode($before, JSON_UNESCAPED_UNICODE),
+                json_encode(compact("phone", "name", "amount", "narration"), JSON_UNESCAPED_UNICODE),
+            ],
+        );
         ecRecalculatePaymentUpload($uploadId);
         $db->commit();
     } catch (Throwable $error) {
@@ -385,7 +423,13 @@ function ecUpdatePaymentEntry(int $entryId, int $uploadId, int $userId, string $
 function ecDeletePaymentEntry(int $entryId, int $uploadId, int $userId): void
 {
     ecAssertPaymentUploadAmendable($uploadId, $userId);
-    $before = ecQuery("SELECT phone,cust_name,amount,narration FROM payment_lot_entries WHERE id=? AND upload_id=?", "ii", [$entryId, $uploadId])->get_result()->fetch_assoc();
+    $before = ecQuery(
+        "SELECT phone,cust_name,amount,narration FROM payment_lot_entries WHERE id=? AND upload_id=?",
+        "ii",
+        [$entryId, $uploadId],
+    )
+        ->get_result()
+        ->fetch_assoc();
     if (!$before) {
         throw new DomainException("Payment entry not found.");
     }
@@ -393,7 +437,11 @@ function ecDeletePaymentEntry(int $entryId, int $uploadId, int $userId): void
     $db->begin_transaction();
     try {
         ecQuery("DELETE FROM payment_lot_entries WHERE id=? AND upload_id=?", "ii", [$entryId, $uploadId]);
-        ecQuery("INSERT INTO payment_lot_amendment_log(upload_id,entry_id,action,changed_by,before_json) VALUES(?,?,'DELETE',?,?)", "iiis", [$uploadId, $entryId, $userId, json_encode($before, JSON_UNESCAPED_UNICODE)]);
+        ecQuery(
+            "INSERT INTO payment_lot_amendment_log(upload_id,entry_id,action,changed_by,before_json) VALUES(?,?,'DELETE',?,?)",
+            "iiis",
+            [$uploadId, $entryId, $userId, json_encode($before, JSON_UNESCAPED_UNICODE)],
+        );
         ecRecalculatePaymentUpload($uploadId);
         $db->commit();
     } catch (Throwable $error) {
@@ -401,3 +449,4 @@ function ecDeletePaymentEntry(int $entryId, int $uploadId, int $userId): void
         throw $error;
     }
 }
+

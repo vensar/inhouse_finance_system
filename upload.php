@@ -18,33 +18,27 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         }
         $f = $_FILES["csv_file"] ?? null;
         if (!$f || $f["error"] !== UPLOAD_ERR_OK) {
-            throw new DomainException(
-                "The file could not be uploaded. Choose a CSV within the displayed size limit.",
-            );
+            throw new DomainException("The file could not be uploaded. Choose a CSV within the displayed size limit.");
         }
-        if (
-            strtolower(pathinfo($f["name"], PATHINFO_EXTENSION)) !== "csv" ||
-            $f["size"] > 2 * 1024 * 1024
-        ) {
+        if (strtolower(pathinfo($f["name"], PATHINFO_EXTENSION)) !== "csv" || $f["size"] > 2 * 1024 * 1024) {
             throw new DomainException("Choose a .csv file no larger than 2 MB.");
         }
         $count = ecImportCsv($f["tmp_name"], $selected, (int) $_SESSION["user_id"]);
-        $_SESSION["upload_notice"] =
-            number_format($count) . " payment records imported successfully.";
+        $_SESSION["upload_notice"] = number_format($count) . " payment records imported successfully.";
         header("Location: upload", true, 303);
         exit();
     } catch (DomainException $e) {
         $error = $e->getMessage();
     } catch (Throwable $e) {
         error_log("Payment import: " . $e->getMessage());
-        $error =
-            "Nothing was imported. The database could not save this file. Please contact the administrator.";
+        $error = "Nothing was imported. The database could not save this file. Please contact the administrator.";
     }
 }
 $csrf = generateCSRFToken();
 $districts = getAllDistricts();
 ecHeader("Bulk upload", "upload");
 ?>
+
 <div class="page-heading">
     <div>
         <div class="eyebrow">Data import</div>
@@ -54,12 +48,15 @@ ecHeader("Bulk upload", "upload");
 </div>
 <?php
 if ($message): ?>
+
 <div class="alert alert-success" role="status"><?= ecEscape($message) ?></div>
 <?php endif;
 if ($error): ?>
+
 <div class="alert alert-danger error-lines" role="alert"><?= ecEscape($error) ?></div>
 <?php endif;
 ?>
+
 <div class="upload-grid">
     <section class="panel">
         <div class="panel-heading"><h2>Upload a payment file</h2></div>
@@ -70,48 +67,29 @@ if ($error): ?>
                 <select id="district_id" name="district_id" class="form-select">
                     <option value="0">Use the District column or detect from Narration</option>
                     <?php foreach ($districts as $d): ?>
-                    <option value="<?= (int) $d["id"] ?>" <?= $selected == $d["id"]
-    ? "selected"
-    : "" ?>>
-                        <?= ecEscape($d["name"]) ?> — all rows
-                    </option>
+
+                    <option value="<?= (int) $d["id"] ?>" <?= $selected == $d["id"] ? "selected" : "" ?>><?= ecEscape($d["name"]) ?> — all rows</option>
                     <?php endforeach; ?>
+
                 </select>
-                <p class="muted mt-2">
-                    For a file from one district, select its name to assign every row explicitly.
-                </p>
+                <p class="muted mt-2">For a file from one district, select its name to assign every row explicitly.</p>
             </div>
             <div class="mb-4">
                 <label for="csv_file" class="form-label">Payment CSV</label>
-                <input
-                    id="csv_file"
-                    type="file"
-                    name="csv_file"
-                    class="form-control"
-                    accept=".csv,text/csv"
-                    required
-                />
+                <input id="csv_file" type="file" name="csv_file" class="form-control" accept=".csv,text/csv" required />
                 <p class="muted mt-2">
-                    CSV UTF-8 · Up to 10,000 records · Maximum 2 MB (server limit:
-                    <?= ecEscape(ini_get("upload_max_filesize")) ?>)
+                    CSV UTF-8 · Up to 10,000 records · Maximum 2 MB (server limit: <?= ecEscape(ini_get("upload_max_filesize")) ?>)
                 </p>
             </div>
             <button class="btn btn-primary" type="submit">Validate and import</button>
-            <p class="muted mt-3">
-                A file with invalid rows is rejected in full. Correct the listed rows and retry.
-            </p>
+            <p class="muted mt-3">A file with invalid rows is rejected in full. Correct the listed rows and retry.</p>
         </form>
     </section>
     <aside class="panel">
         <div class="panel-heading"><h2>Use the right template</h2></div>
         <div class="panel-body">
-            <a class="btn btn-outline-secondary mb-2 w-100" href="download_template">
-                Download standard CSV
-            </a>
-            <a
-                class="btn btn-outline-secondary mb-4 w-100"
-                href="download_template?district_template=1"
-            >
+            <a class="btn btn-outline-secondary mb-2 w-100" href="download_template"> Download standard CSV </a>
+            <a class="btn btn-outline-secondary mb-4 w-100" href="download_template?district_template=1">
                 Download CSV with District column
             </a>
             <ul class="upload-help ps-3">
@@ -123,12 +101,11 @@ if ($error): ?>
                     column is optional.
                 </li>
                 <li>
-                    Use SUCCESS, FAILED, or PENDING. Amounts must be numeric; phone numbers should
-                    be saved as text.
+                    Use SUCCESS, FAILED, or PENDING. Amounts must be numeric; phone numbers should be saved as text.
                 </li>
                 <li>
-                    Unknown or ambiguous districts must be selected explicitly. Blank customer names
-                    are retained for later review.
+                    Unknown or ambiguous districts must be selected explicitly. Blank customer names are retained for
+                    later review.
                 </li>
                 <li>
                     Save as
@@ -136,8 +113,8 @@ if ($error): ?>
                     , not an Excel workbook.
                 </li>
                 <li>
-                    The same file and district selection cannot be imported twice. Different files
-                    may still contain repeated payments.
+                    The same file and district selection cannot be imported twice. Different files may still contain
+                    repeated payments.
                 </li>
             </ul>
         </div>
@@ -151,3 +128,4 @@ if ($error): ?>
     });
 </script>
 <?php ecFooter(); ?>
+

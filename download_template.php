@@ -9,13 +9,7 @@ header("Cache-Control: no-store");
 $out = fopen("php://output", "w");
 fwrite($out, "\xEF\xBB\xBF");
 $headers = ["Phone", "CustName", "TranAmount", "Status", "Narration"];
-$sample = [
-    "256700000000",
-    "EXAMPLE RECIPIENT",
-    "75000",
-    "SUCCESS",
-    "Payment for polling officials in AGAGO",
-];
+$sample = ["256700000000", "EXAMPLE RECIPIENT", "75000", "SUCCESS", "Payment for polling officials in AGAGO"];
 if (isset($_GET["district_template"])) {
     $headers[] = "District";
     $sample[] = "AGAGO";
@@ -23,3 +17,4 @@ if (isset($_GET["district_template"])) {
 fputcsv($out, $headers, ",", '"', "");
 fputcsv($out, $sample, ",", '"', "");
 fclose($out);
+
